@@ -4,9 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:bun": "bun run dev",
     "build": "next build",
+    "build:bun": "bun run build",
     "start": "next start",
-    "lint": "eslint"
+    "start:bun": "bun run start",
+    "lint": "eslint",
+    "lint:bun": "bun run lint"
   },
   "dependencies": {
     "react": "19.2.0",

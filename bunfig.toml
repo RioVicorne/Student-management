@@ -1,0 +1,20 @@
+# Bun configuration file
+[install]
+# Use bun's faster package manager
+auto = true
+
+[install.lockfile]
+# Ensure lockfile is saved
+save = true
+
+[install.scopes]
+# Configure scoped packages if needed
+
+[test]
+# Configure test settings
+preload = []
+
+[run]
+# Configure run settings
+bun = "bun"
+
