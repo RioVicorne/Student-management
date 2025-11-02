@@ -20,6 +20,8 @@ export default function StudentForm({ student, onClose }: StudentFormProps) {
     dateOfBirth: '',
     major: '',
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (student) {
@@ -37,12 +39,30 @@ export default function StudentForm({ student, onClose }: StudentFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (student) {
-      updateStudent(student.id, formData);
-    } else {
-      addStudent(formData);
+    // Simple client-side validation
+    const newErrors: Record<string, string> = {};
+    if (!formData.name.trim()) newErrors.name = 'Vui lòng nhập họ và tên.';
+    if (!formData.studentId.trim()) newErrors.studentId = 'Vui lòng nhập mã sinh viên.';
+    if (!formData.email.trim() || !/^\S+@\S+\.\S+$/.test(formData.email)) newErrors.email = 'Vui lòng nhập email hợp lệ.';
+    if (!formData.phone.trim() || !/^[0-9+\-\s()]{7,}$/.test(formData.phone)) newErrors.phone = 'Vui lòng nhập số điện thoại hợp lệ (ít nhất 7 ký tự).';
+    if (!formData.address.trim()) newErrors.address = 'Vui lòng nhập địa chỉ.';
+    if (!formData.dateOfBirth) newErrors.dateOfBirth = 'Vui lòng chọn ngày sinh.';
+    if (!formData.major) newErrors.major = 'Vui lòng chọn chuyên ngành.';
+
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
+
+    setIsSubmitting(true);
+    try {
+      if (student) {
+        updateStudent(student.id, formData);
+      } else {
+        addStudent(formData);
+      }
+      onClose();
+    } finally {
+      setIsSubmitting(false);
     }
-    onClose();
   };
 
   const handleChange = (
@@ -99,6 +119,7 @@ export default function StudentForm({ student, onClose }: StudentFormProps) {
                 className="w-full px-4 py-3 bg-white/10 backdrop-blur-md border border-white/30 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 transition-all"
                 placeholder="Nhập họ và tên"
               />
+              {errors.name && <p className="text-red-400 text-sm mt-2">{errors.name}</p>}
             </div>
 
             <div>
@@ -114,6 +135,7 @@ export default function StudentForm({ student, onClose }: StudentFormProps) {
                 className="w-full px-4 py-3 bg-white/10 backdrop-blur-md border border-white/30 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 transition-all"
                 placeholder="Nhập mã sinh viên"
               />
+              {errors.studentId && <p className="text-red-400 text-sm mt-2">{errors.studentId}</p>}
             </div>
           </div>
 
@@ -131,6 +153,7 @@ export default function StudentForm({ student, onClose }: StudentFormProps) {
                 className="w-full px-4 py-3 bg-white/10 backdrop-blur-md border border-white/30 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 transition-all"
                 placeholder="example@email.com"
               />
+              {errors.email && <p className="text-red-400 text-sm mt-2">{errors.email}</p>}
             </div>
 
             <div>
@@ -146,6 +169,7 @@ export default function StudentForm({ student, onClose }: StudentFormProps) {
                 className="w-full px-4 py-3 bg-white/10 backdrop-blur-md border border-white/30 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 transition-all"
                 placeholder="0123456789"
               />
+              {errors.phone && <p className="text-red-400 text-sm mt-2">{errors.phone}</p>}
             </div>
           </div>
 
@@ -162,6 +186,7 @@ export default function StudentForm({ student, onClose }: StudentFormProps) {
               className="w-full px-4 py-3 bg-white/10 backdrop-blur-md border border-white/30 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 transition-all"
               placeholder="Nhập địa chỉ"
             />
+            {errors.address && <p className="text-red-400 text-sm mt-2">{errors.address}</p>}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -177,6 +202,7 @@ export default function StudentForm({ student, onClose }: StudentFormProps) {
                 required
                 className="w-full px-4 py-3 bg-white/10 backdrop-blur-md border border-white/30 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 transition-all [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert"
               />
+              {errors.dateOfBirth && <p className="text-red-400 text-sm mt-2">{errors.dateOfBirth}</p>}
             </div>
 
             <div>
@@ -212,6 +238,7 @@ export default function StudentForm({ student, onClose }: StudentFormProps) {
                   Kinh tế
                 </option>
               </select>
+              {errors.major && <p className="text-red-400 text-sm mt-2">{errors.major}</p>}
             </div>
           </div>
 
@@ -225,9 +252,10 @@ export default function StudentForm({ student, onClose }: StudentFormProps) {
             </button>
             <button
               type="submit"
-              className="px-6 py-3 bg-blue-500/80 backdrop-blur-md text-white rounded-xl font-semibold hover:bg-blue-500 hover:scale-105 active:scale-95 shadow-lg border border-blue-400/50 transition-all duration-300"
+              disabled={isSubmitting}
+              className={`px-6 py-3 bg-blue-500/80 backdrop-blur-md text-white rounded-xl font-semibold hover:bg-blue-500 hover:scale-105 active:scale-95 shadow-lg border border-blue-400/50 transition-all duration-300 ${isSubmitting ? 'opacity-60 pointer-events-none' : ''}`}
             >
-              {student ? 'Cập nhật' : 'Thêm mới'}
+              {isSubmitting ? 'Đang xử lý...' : student ? 'Cập nhật' : 'Thêm mới'}
             </button>
           </div>
         </form>

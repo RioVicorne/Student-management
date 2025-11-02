@@ -27,7 +27,14 @@ body {
 
 /* Liquid Glass Background */
 .liquid-glass-bg {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #00f2fe 100%);
+  background: linear-gradient(
+    135deg,
+    #667eea 0%,
+    #764ba2 25%,
+    #f093fb 50%,
+    #4facfe 75%,
+    #00f2fe 100%
+  );
   background-size: 400% 400%;
   animation: gradientShift 15s ease infinite;
   position: relative;
@@ -35,24 +42,32 @@ body {
 }
 
 .liquid-glass-bg::before {
-  content: '';
+  content: "";
   position: absolute;
   top: -50%;
   left: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.1) 0%,
+    transparent 70%
+  );
   animation: rotate 20s linear infinite;
 }
 
 .liquid-glass-bg::after {
-  content: '';
+  content: "";
   position: absolute;
   top: -30%;
   right: -30%;
   width: 80%;
   height: 80%;
-  background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.15) 0%,
+    transparent 70%
+  );
   animation: rotate 25s linear infinite reverse;
 }
 
@@ -96,7 +111,8 @@ body {
 
 /* Floating Animation */
 @keyframes float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0px);
   }
   50% {
@@ -115,7 +131,7 @@ body {
 }
 
 .shine::before {
-  content: '';
+  content: "";
   position: absolute;
   top: -50%;
   left: -50%;
@@ -194,4 +210,51 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.5);
+}
+
+/* Container utility */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* Mobile card view for tables */
+.mobile-card-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.mobile-card {
+  padding: 1rem;
+  border-radius: 1rem;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.03),
+    rgba(255, 255, 255, 0.02)
+  );
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.mobile-card .meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+/* Hide table on small screens and show card list instead */
+@media (max-width: 768px) {
+  .responsive-table {
+    display: none;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-card-list {
+    display: none;
+  }
 }

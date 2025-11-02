@@ -15,6 +15,8 @@ export default function StudentList() {
   const [showForm, setShowForm] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState<'name' | 'major' | 'studentId'>('name');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const filteredStudents = students.filter(
@@ -23,6 +25,18 @@ export default function StudentList() {
       student.studentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Apply sorting without mutating original array
+  const displayedStudents = [...filteredStudents].sort((a, b) => {
+    let A = a[sortBy] || '';
+    let B = b[sortBy] || '';
+    if (typeof A === 'string') A = A.toLowerCase();
+    if (typeof B === 'string') B = B.toLowerCase();
+
+    if (A < B) return sortDir === 'asc' ? -1 : 1;
+    if (A > B) return sortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
 
   const handleEdit = (student: Student) => {
     setEditingStudent(student);
@@ -240,11 +254,31 @@ export default function StudentList() {
               className="w-full pl-12 pr-4 py-3 bg-white/10 backdrop-blur-md border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 transition-all"
             />
           </div>
+          {/* Sort controls */}
+          <div className="mt-3 flex gap-3 items-center">
+            <label className="text-white/80 text-sm">Sắp xếp:</label>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="px-3 py-2 bg-white/10 border border-white/20 rounded-md text-white"
+            >
+              <option value="name">Tên</option>
+              <option value="major">Chuyên ngành</option>
+              <option value="studentId">Mã SV</option>
+            </select>
+            <button
+              onClick={() => setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))}
+              className="px-3 py-2 glass rounded-md text-white"
+              title="Đổi chiều sắp xếp"
+            >
+              {sortDir === 'asc' ? 'Tăng dần' : 'Giảm dần'}
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Students List */}
-      {filteredStudents.length === 0 ? (
+      {displayedStudents.length === 0 ? (
         <div className="glass-strong rounded-3xl p-12 text-center">
           <div className="inline-block p-6 bg-white/10 rounded-full mb-4">
             <svg
@@ -269,7 +303,43 @@ export default function StudentList() {
         </div>
       ) : (
         <div className="glass-strong rounded-3xl p-6 overflow-hidden">
-          <div className="overflow-x-auto">
+          {/* Mobile card view */}
+          <div className="mobile-card-list mb-4">
+            {displayedStudents.map((student) => (
+              <div key={student.id} className="mobile-card glass">
+                <div className="meta">
+                  <div>
+                    <div className="text-white font-semibold">{student.name}</div>
+                    <div className="text-white/70 text-sm">{student.studentId}</div>
+                  </div>
+                  <div className="text-white/80 text-sm">{student.major}</div>
+                </div>
+                <div className="text-white/80 text-sm mb-2">{student.email}</div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleViewDetail(student)}
+                    className="px-3 py-2 bg-blue-500/80 text-white rounded-lg"
+                  >
+                    Xem
+                  </button>
+                  <button
+                    onClick={() => handleEdit(student)}
+                    className="px-3 py-2 bg-yellow-500/80 text-white rounded-lg"
+                  >
+                    Sửa
+                  </button>
+                  <button
+                    onClick={() => handleDelete(student.id)}
+                    className="px-3 py-2 bg-red-500/80 text-white rounded-lg"
+                  >
+                    Xóa
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="overflow-x-auto responsive-table">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-white/20">
@@ -297,7 +367,7 @@ export default function StudentList() {
                 </tr>
               </thead>
               <tbody>
-                {filteredStudents.map((student, index) => (
+                {displayedStudents.map((student, index) => (
                   <tr
                     key={student.id}
                     className="border-b border-white/10 hover:bg-white/5 transition-all duration-300"
