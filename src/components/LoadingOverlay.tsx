@@ -22,7 +22,7 @@ export default function LoadingOverlay({ isLoading, message = 'Đang tải...' }
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.8, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            transition={{ type: 'spring' as const, stiffness: 300, damping: 30 }}
             className="glass-strong rounded-2xl p-8 flex flex-col items-center gap-4"
           >
             <LoadingSpinner size="lg" className="text-white" />

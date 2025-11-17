@@ -43,10 +43,10 @@ export default function AnimatedButton({
       whileHover={{ scale: 1.05, y: -2 }}
       whileTap={{ scale: 0.95, y: 0 }}
       transition={{
-        type: 'spring',
+        type: 'spring' as const,
         stiffness: 400,
         damping: 17,
-      }}
+      } as const}
       className={`${baseClasses} ${sizeClasses[size]} ${variantClasses[variant]} ${className} ${
         isLoading ? 'opacity-60 pointer-events-none' : ''
       }`}
