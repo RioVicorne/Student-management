@@ -5,6 +5,7 @@ import { Student, StudentFormData } from '@/types/student';
 
 interface StudentContextType {
   students: Student[];
+  isLoading: boolean;
   addStudent: (student: StudentFormData) => void;
   updateStudent: (id: string, student: StudentFormData) => void;
   deleteStudent: (id: string) => void;
@@ -19,21 +20,27 @@ const STORAGE_KEY = 'students_data';
 
 export function StudentProvider({ children }: { children: React.ReactNode }) {
   const [students, setStudents] = useState<Student[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Load from localStorage on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          setStudents(parsed);
+      setIsLoading(true);
+      // Simulate a small delay for better UX
+      setTimeout(() => {
+        try {
+          const saved = localStorage.getItem(STORAGE_KEY);
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            setStudents(parsed);
+          }
+        } catch (error) {
+          console.error('Error loading students from localStorage:', error);
         }
-      } catch (error) {
-        console.error('Error loading students from localStorage:', error);
-      }
-      setIsLoaded(true);
+        setIsLoaded(true);
+        setIsLoading(false);
+      }, 500);
     }
   }, []);
 
@@ -85,6 +92,7 @@ export function StudentProvider({ children }: { children: React.ReactNode }) {
     <StudentContext.Provider
       value={{
         students,
+        isLoading,
         addStudent,
         updateStudent,
         deleteStudent,

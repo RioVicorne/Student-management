@@ -1,15 +1,22 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 import { Student } from '@/types/student';
 import { useStudent } from '@/contexts/StudentContext';
 import StudentForm from './StudentForm';
 import StudentDetail from './StudentDetail';
-import Dashboard from './Dashboard';
+import Header from './Header';
+import StatsCards from './StatsCards';
+import SearchBar from './SearchBar';
+import SkeletonTable from './SkeletonTable';
+import SkeletonCard from './SkeletonCard';
+import Pagination from './Pagination';
 import { exportToJSON, exportToCSV, downloadFile, importFromJSON, importFromCSV } from '@/utils/exportImport';
 
 export default function StudentList() {
-  const { students, deleteStudent, importStudents } = useStudent();
+  const { students, isLoading, deleteStudent, importStudents } = useStudent();
   const [editingStudent, setEditingStudent] = useState<Student | undefined>();
   const [viewingStudent, setViewingStudent] = useState<Student | undefined>();
   const [showForm, setShowForm] = useState(false);
@@ -17,6 +24,8 @@ export default function StudentList() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'major' | 'studentId'>('name');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10); // Items per page
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const filteredStudents = students.filter(
@@ -27,7 +36,7 @@ export default function StudentList() {
   );
 
   // Apply sorting without mutating original array
-  const displayedStudents = [...filteredStudents].sort((a, b) => {
+  const sortedStudents = [...filteredStudents].sort((a, b) => {
     let A = a[sortBy] || '';
     let B = b[sortBy] || '';
     if (typeof A === 'string') A = A.toLowerCase();
@@ -38,15 +47,59 @@ export default function StudentList() {
     return 0;
   });
 
+  // Apply pagination
+  const totalPages = Math.ceil(sortedStudents.length / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const displayedStudents = sortedStudents.slice(startIndex, endIndex);
+
+  // Reset to page 1 when search or sort changes
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, sortBy, sortDir]);
+
   const handleEdit = (student: Student) => {
     setEditingStudent(student);
     setShowForm(true);
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Bạn có chắc chắn muốn xóa sinh viên này?')) {
-      deleteStudent(id);
-    }
+    const student = students.find(s => s.id === id);
+    toast.custom((t) => (
+      <div className="glass-strong rounded-xl p-4 border border-red-400/50">
+        <div className="flex items-start gap-3">
+          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+            <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <div className="flex-1">
+            <h3 className="text-white font-semibold mb-1">Xác nhận xóa</h3>
+            <p className="text-white/80 text-sm mb-3">
+              Bạn có chắc chắn muốn xóa sinh viên <strong>{student?.name}</strong>?
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  deleteStudent(id);
+                  toast.dismiss(t);
+                  toast.success('Đã xóa sinh viên thành công!');
+                }}
+                className="px-3 py-1.5 bg-red-500/80 hover:bg-red-500 text-white rounded-lg text-sm font-medium transition-all"
+              >
+                Xóa
+              </button>
+              <button
+                onClick={() => toast.dismiss(t)}
+                className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-medium transition-all"
+              >
+                Hủy
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    ), { duration: Infinity });
   };
 
   const handleCloseForm = () => {
@@ -70,13 +123,31 @@ export default function StudentList() {
   };
 
   const handleExportJSON = () => {
-    const json = exportToJSON(students);
-    downloadFile(json, `students_${new Date().toISOString().split('T')[0]}.json`, 'application/json');
+    try {
+      const json = exportToJSON(students);
+      downloadFile(json, `students_${new Date().toISOString().split('T')[0]}.json`, 'application/json');
+      toast.success('Export JSON thành công!', {
+        description: `Đã export ${students.length} sinh viên sang file JSON`
+      });
+    } catch (error) {
+      toast.error('Lỗi khi export JSON', {
+        description: (error as Error).message
+      });
+    }
   };
 
   const handleExportCSV = () => {
-    const csv = exportToCSV(students);
-    downloadFile(csv, `students_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
+    try {
+      const csv = exportToCSV(students);
+      downloadFile(csv, `students_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
+      toast.success('Export CSV thành công!', {
+        description: `Đã export ${students.length} sinh viên sang file CSV`
+      });
+    } catch (error) {
+      toast.error('Lỗi khi export CSV', {
+        description: (error as Error).message
+      });
+    }
   };
 
   const handleImport = () => {
@@ -98,189 +169,144 @@ export default function StudentList() {
         } else if (file.name.endsWith('.csv')) {
           importedStudents = importFromCSV(content);
         } else {
-          alert('Vui lòng chọn file JSON hoặc CSV');
+          toast.error('Vui lòng chọn file JSON hoặc CSV', {
+            description: 'Chỉ hỗ trợ định dạng .json và .csv'
+          });
           return;
         }
 
-        if (
-          confirm(
-            `Bạn có muốn thêm ${importedStudents.length} sinh viên từ file này vào danh sách hiện tại? (Chọn OK để thêm, Cancel để thay thế)`
-          )
-        ) {
-          // Add to existing
-          const newStudents = [...students, ...importedStudents];
-          importStudents(newStudents);
-        } else {
-          // Replace existing
-          importStudents(importedStudents);
-        }
-        alert(`Đã import thành công ${importedStudents.length} sinh viên!`);
+        // Show confirmation toast
+        toast.custom((t) => (
+          <div className="glass-strong rounded-xl p-4 border border-blue-400/50">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+                <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-white font-semibold mb-1">Import {importedStudents.length} sinh viên</h3>
+                <p className="text-white/80 text-sm mb-3">
+                  Bạn muốn thêm vào danh sách hiện tại hay thay thế toàn bộ?
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      const newStudents = [...students, ...importedStudents];
+                      importStudents(newStudents);
+                      toast.dismiss(t);
+                      toast.success(`Đã thêm ${importedStudents.length} sinh viên!`, {
+                        description: 'Sinh viên mới đã được thêm vào danh sách'
+                      });
+                    }}
+                    className="px-3 py-1.5 bg-green-500/80 hover:bg-green-500 text-white rounded-lg text-sm font-medium transition-all"
+                  >
+                    Thêm vào
+                  </button>
+                  <button
+                    onClick={() => {
+                      importStudents(importedStudents);
+                      toast.dismiss(t);
+                      toast.success(`Đã thay thế bằng ${importedStudents.length} sinh viên!`, {
+                        description: 'Danh sách cũ đã được thay thế'
+                      });
+                    }}
+                    className="px-3 py-1.5 bg-blue-500/80 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-all"
+                  >
+                    Thay thế
+                  </button>
+                  <button
+                    onClick={() => toast.dismiss(t)}
+                    className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-medium transition-all"
+                  >
+                    Hủy
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ), { duration: Infinity });
       } catch (error) {
-        alert('Lỗi khi import file: ' + (error as Error).message);
+        toast.error('Lỗi khi import file', {
+          description: (error as Error).message
+        });
       }
     };
     reader.readAsText(file);
     e.target.value = ''; // Reset input
   };
 
+  // Calculate stats
+  const stats = {
+    total: students.length,
+    byMajor: students.reduce((acc, student) => {
+      acc[student.major] = (acc[student.major] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>),
+    majors: Object.keys(
+      students.reduce((acc, student) => {
+        acc[student.major] = true;
+        return acc;
+      }, {} as Record<string, boolean>)
+    ).length,
+  };
+
+  const majorEntries = Object.entries(stats.byMajor).sort((a, b) => b[1] - a[1]);
+
   return (
-    <div className="min-h-screen p-6 md:p-8 lg:p-12 relative z-10">
-      {/* Dashboard */}
-      <Dashboard />
+    <div className="min-h-screen p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto">
+      {/* Header */}
+      <Header
+        onAddNew={handleAddNew}
+        onImport={handleImport}
+        onExportJSON={handleExportJSON}
+        onExportCSV={handleExportCSV}
+      />
 
-      {/* Header Section */}
-      <div className="mb-8 float-animation">
-        <div className="glass-strong rounded-3xl p-8 mb-6 shine">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-              <h1 className="text-4xl md:text-5xl font-bold text-white mb-2 drop-shadow-lg">
-                Quản lý sinh viên
-              </h1>
-              <p className="text-white/80 text-lg">
-                Hệ thống quản lý thông tin sinh viên hiện đại
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={handleImport}
-                className="glass px-4 py-3 rounded-xl text-white font-semibold hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl backdrop-blur-md border border-white/30 hover:border-white/50 transition-all duration-300 flex items-center gap-2"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                  />
-                </svg>
-                Import
-              </button>
-              <div className="glass px-4 py-3 rounded-xl backdrop-blur-md border border-white/30 flex items-center gap-2">
-                <button
-                  onClick={handleExportJSON}
-                  className="text-white font-semibold hover:text-white/80 transition-colors flex items-center gap-1"
-                  title="Export JSON"
-                >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                  JSON
-                </button>
-                <span className="text-white/50">|</span>
-                <button
-                  onClick={handleExportCSV}
-                  className="text-white font-semibold hover:text-white/80 transition-colors flex items-center gap-1"
-                  title="Export CSV"
-                >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                  CSV
-                </button>
-              </div>
-              <button
-                onClick={handleAddNew}
-                className="glass-strong px-6 py-3 rounded-xl text-white font-semibold hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl backdrop-blur-md border border-white/40 hover:border-white/60 transition-all duration-300"
-              >
-                <span className="flex items-center gap-2">
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 4v16m8-8H4"
-                    />
-                  </svg>
-                  Thêm sinh viên mới
-                </span>
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* Stats Cards */}
+      <StatsCards
+        total={stats.total}
+        majors={stats.majors}
+        topMajor={majorEntries[0]?.[0]}
+        topMajorCount={majorEntries[0]?.[1]}
+      />
 
-        {/* Search Bar */}
-        <div className="glass rounded-2xl p-4 mb-6">
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <svg
-                className="w-6 h-6 text-white/70"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-            </div>
-            <input
-              type="text"
-              placeholder="Tìm kiếm theo tên, mã sinh viên hoặc email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-white/10 backdrop-blur-md border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 transition-all"
-            />
-          </div>
-          {/* Sort controls */}
-          <div className="mt-3 flex gap-3 items-center">
-            <label className="text-white/80 text-sm">Sắp xếp:</label>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
-              className="px-3 py-2 bg-white/10 border border-white/20 rounded-md text-white"
-            >
-              <option value="name">Tên</option>
-              <option value="major">Chuyên ngành</option>
-              <option value="studentId">Mã SV</option>
-            </select>
-            <button
-              onClick={() => setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))}
-              className="px-3 py-2 glass rounded-md text-white"
-              title="Đổi chiều sắp xếp"
-            >
-              {sortDir === 'asc' ? 'Tăng dần' : 'Giảm dần'}
-            </button>
-          </div>
-        </div>
-      </div>
+      {/* Search & Filter */}
+      <SearchBar
+        value={searchTerm}
+        onChange={setSearchTerm}
+        sortBy={sortBy}
+        onSortChange={setSortBy}
+        sortDir={sortDir}
+        onSortDirChange={() => setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))}
+      />
 
       {/* Students List */}
-      {displayedStudents.length === 0 ? (
-        <div className="glass-strong rounded-3xl p-12 text-center">
-          <div className="inline-block p-6 bg-white/10 rounded-full mb-4">
+      {isLoading ? (
+        <>
+          {/* Mobile skeleton */}
+          <div className="mobile-card-list">
+            {[...Array(3)].map((_, i) => (
+              <SkeletonCard key={i} />
+            ))}
+          </div>
+          {/* Desktop skeleton */}
+          <div className="responsive-table">
+            <SkeletonTable rows={5} columns={7} />
+          </div>
+        </>
+      ) : displayedStudents.length === 0 ? (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="glass-strong rounded-3xl p-12 text-center"
+        >
+          <motion.div
+            animate={{ y: [0, -10, 0] }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+            className="inline-block p-6 bg-white/10 rounded-full mb-4"
+          >
             <svg
               className="w-16 h-16 text-white/70"
               fill="none"
@@ -294,161 +320,188 @@ export default function StudentList() {
                 d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
               />
             </svg>
-          </div>
+          </motion.div>
           <p className="text-white text-xl font-medium">
             {students.length === 0
               ? 'Chưa có sinh viên nào. Hãy thêm sinh viên mới!'
               : 'Không tìm thấy sinh viên nào phù hợp.'}
           </p>
-        </div>
+        </motion.div>
       ) : (
-        <div className="glass-strong rounded-3xl p-6 overflow-hidden">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="glass rounded-xl p-4 overflow-hidden"
+        >
           {/* Mobile card view */}
           <div className="mobile-card-list mb-4">
-            {displayedStudents.map((student) => (
-              <div key={student.id} className="mobile-card glass">
-                <div className="meta">
-                  <div>
-                    <div className="text-white font-semibold">{student.name}</div>
-                    <div className="text-white/70 text-sm">{student.studentId}</div>
+            <AnimatePresence mode="popLayout">
+              {displayedStudents.map((student, index) => (
+                <motion.div
+                  key={student.id}
+                  initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, x: -100, scale: 0.8 }}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                  layout
+                  className="mobile-card glass"
+                >
+                  <div className="meta">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-white font-semibold text-sm truncate">{student.name}</div>
+                      <div className="text-white/60 text-xs font-mono">{student.studentId}</div>
+                    </div>
+                    <span className="text-white/80 text-[10px] px-2 py-0.5 bg-white/10 rounded whitespace-nowrap flex-shrink-0">
+                      {student.major.length > 15 ? student.major.substring(0, 12) + '...' : student.major}
+                    </span>
                   </div>
-                  <div className="text-white/80 text-sm">{student.major}</div>
-                </div>
-                <div className="text-white/80 text-sm mb-2">{student.email}</div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleViewDetail(student)}
-                    className="px-3 py-2 bg-blue-500/80 text-white rounded-lg"
-                  >
-                    Xem
-                  </button>
-                  <button
-                    onClick={() => handleEdit(student)}
-                    className="px-3 py-2 bg-yellow-500/80 text-white rounded-lg"
-                  >
-                    Sửa
-                  </button>
-                  <button
-                    onClick={() => handleDelete(student.id)}
-                    className="px-3 py-2 bg-red-500/80 text-white rounded-lg"
-                  >
-                    Xóa
-                  </button>
-                </div>
-              </div>
-            ))}
+                  <div className="text-white/60 text-xs mb-2 truncate">{student.email}</div>
+                  <div className="flex gap-1.5">
+                    <button
+                      onClick={() => handleViewDetail(student)}
+                      className="flex-1 px-2 py-1.5 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg text-xs font-medium flex items-center justify-center gap-1 active:scale-95 transition-all"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      Xem
+                    </button>
+                    <button
+                      onClick={() => handleEdit(student)}
+                      className="flex-1 px-2 py-1.5 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 rounded-lg text-xs font-medium flex items-center justify-center gap-1 active:scale-95 transition-all"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Sửa
+                    </button>
+                    <button
+                      onClick={() => handleDelete(student.id)}
+                      className="flex-1 px-2 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-xs font-medium flex items-center justify-center gap-1 active:scale-95 transition-all"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      Xóa
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
 
+          {/* Desktop Table view */}
           <div className="overflow-x-auto responsive-table">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-white/20">
-                  <th className="px-4 py-4 text-left text-white font-semibold text-sm uppercase tracking-wider">
+                <tr className="border-b border-white/10">
+                  <th className="px-3 py-3 text-left text-white/70 font-medium text-xs uppercase tracking-wide">
                     Mã SV
                   </th>
-                  <th className="px-4 py-4 text-left text-white font-semibold text-sm uppercase tracking-wider">
+                  <th className="px-3 py-3 text-left text-white/70 font-medium text-xs uppercase tracking-wide">
                     Họ và tên
                   </th>
-                  <th className="px-4 py-4 text-left text-white font-semibold text-sm uppercase tracking-wider">
+                  <th className="px-3 py-3 text-left text-white/70 font-medium text-xs uppercase tracking-wide">
                     Email
                   </th>
-                  <th className="px-4 py-4 text-left text-white font-semibold text-sm uppercase tracking-wider">
-                    Số điện thoại
-                  </th>
-                  <th className="px-4 py-4 text-left text-white font-semibold text-sm uppercase tracking-wider">
+                  <th className="px-3 py-3 text-left text-white/70 font-medium text-xs uppercase tracking-wide">
                     Chuyên ngành
                   </th>
-                  <th className="px-4 py-4 text-left text-white font-semibold text-sm uppercase tracking-wider">
-                    Ngày sinh
-                  </th>
-                  <th className="px-4 py-4 text-center text-white font-semibold text-sm uppercase tracking-wider">
+                  <th className="px-3 py-3 text-center text-white/70 font-medium text-xs uppercase tracking-wide">
                     Thao tác
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {displayedStudents.map((student, index) => (
-                  <tr
-                    key={student.id}
-                    className="border-b border-white/10 hover:bg-white/5 transition-all duration-300"
-                    style={{ animationDelay: `${index * 0.05}s` }}
-                  >
-                    <td className="px-4 py-4 text-white/90 font-medium">
-                      {student.studentId}
-                    </td>
-                    <td className="px-4 py-4 text-white font-semibold">
-                      {student.name}
-                    </td>
-                    <td className="px-4 py-4 text-white/80">
-                      {student.email}
-                    </td>
-                    <td className="px-4 py-4 text-white/80">
-                      {student.phone}
-                    </td>
-                    <td className="px-4 py-4">
-                      <span className="inline-block px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm font-medium border border-white/30">
-                        {student.major}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 text-white/80">
-                      {new Date(student.dateOfBirth).toLocaleDateString('vi-VN')}
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="flex gap-2 justify-center">
-                        <button
-                          onClick={() => handleViewDetail(student)}
-                          className="px-3 py-2 bg-blue-500/80 backdrop-blur-md text-white rounded-lg hover:bg-blue-500 hover:scale-105 active:scale-95 shadow-lg border border-blue-400/50 transition-all duration-300 font-medium"
-                          title="Xem chi tiết"
-                        >
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
+                <AnimatePresence mode="popLayout">
+                  {displayedStudents.map((student, index) => (
+                    <motion.tr
+                      key={student.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 100, height: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.03 }}
+                      layout
+                      whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.03)' }}
+                      className="border-b border-white/5 transition-all duration-200"
+                    >
+                      <td className="px-3 py-3 text-white/70 text-sm font-mono">
+                        {student.studentId}
+                      </td>
+                      <td className="px-3 py-3 text-white font-medium">
+                        {student.name}
+                      </td>
+                      <td className="px-3 py-3 text-white/70 text-sm">
+                        {student.email}
+                      </td>
+                      <td className="px-3 py-3">
+                        <span className="inline-block px-2 py-1 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded text-white/90 text-xs font-medium border border-white/10">
+                          {student.major}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3">
+                        <div className="flex gap-1 justify-center">
+                          <button
+                            onClick={() => handleViewDetail(student)}
+                            className="p-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg active:scale-95 transition-all"
+                            title="Xem"
                           >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                            />
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                            />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={() => handleEdit(student)}
-                          className="px-4 py-2 bg-yellow-500/80 backdrop-blur-md text-white rounded-lg hover:bg-yellow-500 hover:scale-105 active:scale-95 shadow-lg border border-yellow-400/50 transition-all duration-300 font-medium"
-                        >
-                          Sửa
-                        </button>
-                        <button
-                          onClick={() => handleDelete(student.id)}
-                          className="px-4 py-2 bg-red-500/80 backdrop-blur-md text-white rounded-lg hover:bg-red-500 hover:scale-105 active:scale-95 shadow-lg border border-red-400/50 transition-all duration-300 font-medium"
-                        >
-                          Xóa
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => handleEdit(student)}
+                            className="p-2 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 rounded-lg active:scale-95 transition-all"
+                            title="Sửa"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => handleDelete(student.id)}
+                            className="p-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg active:scale-95 transition-all"
+                            title="Xóa"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))}
+                </AnimatePresence>
               </tbody>
             </table>
           </div>
-        </div>
+        </motion.div>
       )}
 
-      {showForm && (
-        <StudentForm student={editingStudent} onClose={handleCloseForm} />
+      {/* Pagination */}
+      {!isLoading && sortedStudents.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          pageSize={pageSize}
+          totalItems={sortedStudents.length}
+        />
       )}
 
-      {showDetail && viewingStudent && (
-        <StudentDetail student={viewingStudent} onClose={handleCloseDetail} />
-      )}
+      <AnimatePresence>
+        {showForm && (
+          <StudentForm student={editingStudent} onClose={handleCloseForm} />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showDetail && viewingStudent && (
+          <StudentDetail student={viewingStudent} onClose={handleCloseDetail} />
+        )}
+      </AnimatePresence>
 
       {/* Hidden file input for import */}
       <input
