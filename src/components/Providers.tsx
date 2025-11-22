@@ -1,8 +1,6 @@
-'use client';
-
-import { StudentProvider } from '@/contexts/StudentContext';
+"use client";
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  return <StudentProvider>{children}</StudentProvider>;
+  return <>{children}</>;
 }
 
