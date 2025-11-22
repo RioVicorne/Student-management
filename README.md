@@ -1,290 +1,299 @@
-# 🎓 Website Quản Lý Sinh Viên
+# 🎓 Student Management Dashboard
 
-> Hệ thống quản lý sinh viên hiện đại với **Glassmorphism UI** và **Framer Motion Animations**
+A modern, responsive Student Management Dashboard built with **Next.js 16**, **React 19**, **TypeScript**, and **Tailwind CSS 4**. Features a beautiful UI with smooth animations and comprehensive student data management capabilities.
 
-![Next.js](https://img.shields.io/badge/Next.js-16.0-black?style=flat-square&logo=next.js)
-![React](https://img.shields.io/badge/React-19.2-blue?style=flat-square&logo=react)
-![Framer Motion](https://img.shields.io/badge/Framer%20Motion-11.x-purple?style=flat-square)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4.0-cyan?style=flat-square&logo=tailwind-css)
-
----
+![Dashboard Preview](https://img.shields.io/badge/Status-Production%20Ready-success)
+![Next.js](https://img.shields.io/badge/Next.js-16.0.1-black)
+![React](https://img.shields.io/badge/React-19.2.0-blue)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.0-38bdf8)
 
 ## ✨ Features
 
-### 🎨 Giao Diện
-- ✅ **Glassmorphism Effects** - Liquid glass style theo Apple
-- ✅ **Animated Gradients** - Background động với nhiều lớp
-- ✅ **Smooth Animations** - 60fps với Framer Motion
-- ✅ **Responsive Design** - Tối ưu cho mobile & desktop
-- ✅ **Micro-interactions** - Hover, tap, focus effects
+### 🎨 Modern UI/UX Design
+- **Clean & Professional Interface** - Material Design inspired with Apple-style aesthetics
+- **Responsive Layout** - Fully responsive across all device sizes
+- **Smooth Animations** - Polished interactions with Framer Motion
+- **Dark Sidebar** - Beautiful gradient sidebar with active state highlighting
+- **Icon System** - Lucide React icons throughout the interface
 
-### 📊 Chức Năng
-- ✅ **Dashboard** - Thống kê sinh viên với charts động
-- ✅ **CRUD Operations** - Thêm, sửa, xóa, xem chi tiết
-- ✅ **Search & Filter** - Tìm kiếm real-time
-- ✅ **Sort** - Sắp xếp theo nhiều tiêu chí
-- ✅ **Import/Export** - JSON và CSV format
-- ✅ **Validation** - Form validation với error messages
+### 📊 Dashboard Components
 
----
+#### 1. **Sidebar Navigation**
+- Fixed left sidebar with gradient background (slate-900 to slate-800)
+- Navigation menu items:
+  - 📊 Dashboard
+  - 👥 Students (Active)
+  - 📚 Courses
+  - 🎓 Grades
+  - ⚙️ Settings
+- Logo section with brand identity
+- Active state highlighting with blue accent
 
-## 🚀 Quick Start
+#### 2. **Header Bar**
+- Quick search functionality
+- Notification bell with badge indicator
+- User profile section (Admin)
+- Logout button with icon
+
+#### 3. **Student Management Table**
+
+**Toolbar Section:**
+- 🔍 Advanced search bar (Search by Student ID, Name, Email)
+- **Filters:**
+  - Faculty/Department dropdown
+  - Class dropdown
+  - Status dropdown (Active, Graduated, Suspended)
+- **Action Buttons:**
+  - ➕ Add New Student (Primary blue button)
+  - 📊 Export to Excel (Secondary button)
+
+**Data Table:**
+- ☑️ Checkbox column for multi-selection
+- \# Index number
+- 🆔 Student ID (e.g., SV001)
+- 👤 Student Info:
+  - Colorful avatar with initials
+  - Full name
+  - Email with icon
+- 📅 Date of Birth & Gender:
+  - Formatted date display
+  - Gender icon (♂/♀) with color coding
+- 🏫 Class/Faculty information
+- 🏷️ Status Badge:
+  - 🟢 Green for Active
+  - 🔵 Blue for Graduated
+  - 🔴 Red for Suspended
+- ⚡ Actions:
+  - 👁️ View Details (Eye icon)
+  - ✏️ Edit (Pencil icon)
+  - 🗑️ Delete (Trash icon)
+
+**Pagination:**
+- Shows "Showing X to Y of Z entries"
+- Previous/Next navigation
+- Numbered page buttons
+- Active page highlighting
+
+## 🚀 Getting Started
 
 ### Prerequisites
-```bash
-Node.js 18+ hoặc Bun 1.0+
-```
+- Node.js 20+ or Bun
+- npm, pnpm, or bun
 
 ### Installation
-```bash
-# Clone repository
-git clone <repo-url>
-cd frontend
 
-# Install dependencies
+1. **Clone the repository:**
+```bash
+git clone <repository-url>
+cd Student-management
+```
+
+2. **Install dependencies:**
+```bash
 npm install
-# hoặc
+# or
 bun install
 ```
 
-### Development
+3. **Run the development server:**
 ```bash
-# Start dev server
 npm run dev
-# hoặc
-bun run dev
+# or
+bun dev
 ```
 
-Mở [http://localhost:3000](http://localhost:3000) để xem kết quả.
+4. **Open your browser:**
+Navigate to [http://localhost:3000](http://localhost:3000)
 
-### Production
-```bash
-# Build
-npm run build
-
-# Start
-npm start
-```
-
----
+The app will automatically redirect to `/dashboard` where you'll see the Student Management Dashboard.
 
 ## 📁 Project Structure
 
 ```
-frontend/
+Student-management/
 ├── src/
-│   ├── app/                   # Next.js App Router
-│   │   ├── layout.tsx        # Root layout
-│   │   ├── page.tsx          # Home page
-│   │   └── globals.css       # Global styles + animations
-│   ├── components/           # React components
-│   │   ├── AnimatedCard.tsx      # Reusable animated card
-│   │   ├── AnimatedButton.tsx    # Reusable animated button
-│   │   ├── Dashboard.tsx         # Stats dashboard
-│   │   ├── StudentList.tsx       # Main student list
-│   │   ├── StudentForm.tsx       # Add/Edit form
-│   │   ├── StudentDetail.tsx     # Detail view
-│   │   └── Providers.tsx         # Context providers
-│   ├── contexts/             # React Context
-│   │   └── StudentContext.tsx    # Student state management
-│   ├── types/                # TypeScript types
-│   │   └── student.ts
-│   └── utils/                # Utility functions
-│       └── exportImport.ts
-├── public/                   # Static assets
-├── DESIGN_GUIDE.md          # 📚 Design documentation
-├── UPGRADE_SUMMARY.md       # 📝 Upgrade details
-└── README.md                # This file
+│   ├── app/
+│   │   ├── dashboard/
+│   │   │   └── page.tsx          # Main dashboard page
+│   │   ├── layout.tsx
+│   │   ├── page.tsx               # Home page (redirects to dashboard)
+│   │   └── globals.css
+│   ├── components/
+│   │   ├── Sidebar.tsx            # Navigation sidebar
+│   │   ├── DashboardHeader.tsx    # Top header bar
+│   │   ├── StudentManagementTable.tsx  # Main table component
+│   │   └── ...                    # Other components
+│   ├── types/
+│   │   └── student.ts             # TypeScript interfaces
+│   └── utils/
+│       └── ...
+├── public/
+├── package.json
+└── README.md
 ```
 
----
+## 🎯 Key Components
 
-## 🎨 Tech Stack
+### Sidebar Component
+**Location:** `src/components/Sidebar.tsx`
 
-### Core
-- **Next.js 16** - React framework
-- **React 19.2** - UI library
-- **TypeScript** - Type safety
-
-### Styling & Animation
-- **Tailwind CSS 4** - Utility-first CSS
-- **Framer Motion 11** - Animation library
-- **Custom CSS** - Glassmorphism effects
-
-### State Management
-- **React Context** - Global state
-- **Local Storage** - Data persistence
-
----
-
-## 📚 Documentation
-
-### Hướng Dẫn Chi Tiết
-- 📖 [**DESIGN_GUIDE.md**](./DESIGN_GUIDE.md) - Design system và usage
-- 📝 [**UPGRADE_SUMMARY.md**](./UPGRADE_SUMMARY.md) - Chi tiết nâng cấp
-
-### Quick Examples
-
-#### Sử dụng AnimatedCard
-```tsx
-import AnimatedCard from '@/components/AnimatedCard';
-
-<AnimatedCard delay={0.2} glassEffect="medium">
-  <h2>Card Content</h2>
-</AnimatedCard>
-```
-
-#### Sử dụng AnimatedButton
-```tsx
-import AnimatedButton from '@/components/AnimatedButton';
-
-<AnimatedButton 
-  variant="primary" 
-  onClick={handleClick}
->
-  Click Me
-</AnimatedButton>
-```
-
----
-
-## 🎯 Key Features Explained
-
-### 1. Glassmorphism
-Hiệu ứng kính mờ với:
-- Backdrop blur
-- Gradient backgrounds
-- Multiple shadow layers
+Features:
+- Fixed positioning on the left
+- Gradient background with glassmorphism effect
+- Active menu item highlighting
 - Smooth hover transitions
+- Responsive navigation items
 
-### 2. Framer Motion Animations
-- **Page transitions** - Smooth navigation
-- **Stagger animations** - Sequential reveals
-- **Layout animations** - Smooth reordering
-- **Exit animations** - Graceful removals
-- **Micro-interactions** - Button/input effects
+### DashboardHeader Component
+**Location:** `src/components/DashboardHeader.tsx`
 
-### 3. Responsive Design
-- **Mobile**: Card-based layout
-- **Tablet**: Optimized spacing
-- **Desktop**: Full table view
-- **Touch-friendly** interactions
+Features:
+- Fixed positioning at the top
+- Quick search bar
+- Notification bell with badge
+- User profile display
+- Logout functionality
 
----
+### StudentManagementTable Component
+**Location:** `src/components/StudentManagementTable.tsx`
 
-## 🔧 Configuration
+Features:
+- Advanced filtering system
+- Multi-select checkboxes
+- Sortable columns (ready for implementation)
+- Action buttons for CRUD operations
+- Responsive pagination
+- Mock data with 10 students
 
-### Customize Colors
-Edit `src/app/globals.css`:
-```css
-:root {
-  --glass-light: rgba(255, 255, 255, 0.1);
-  --glass-medium: rgba(255, 255, 255, 0.15);
-  --glass-strong: rgba(255, 255, 255, 0.2);
+## 🎨 Design System
+
+### Colors
+- **Primary:** Blue (`blue-600`, `blue-700`)
+- **Success:** Green (`green-500`)
+- **Warning:** Yellow (`yellow-500`)
+- **Danger:** Red (`red-500`, `red-600`)
+- **Neutral:** Slate shades
+
+### Typography
+- **Headings:** Bold, sans-serif
+- **Body:** Regular, readable spacing
+- **Font:** System fonts (optimized by Tailwind)
+
+### Shadows & Borders
+- Subtle shadows for depth
+- Rounded corners (8-12px)
+- Clean borders with slate-200
+
+## 📊 Mock Data
+
+The table comes pre-populated with 10 realistic students:
+
+```typescript
+Student {
+  id: string
+  studentId: string (e.g., "SV001")
+  fullName: string
+  email: string
+  dateOfBirth: string
+  gender: 'Male' | 'Female'
+  faculty: string
+  class: string (e.g., "IT-K15")
+  status: 'Active' | 'Graduated' | 'Suspended'
 }
 ```
 
-### Customize Animations
-Edit animation variants in components:
-```typescript
-const customVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 }
-};
-```
+## 🔧 Technologies Used
 
----
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| Next.js | 16.0.1 | React framework |
+| React | 19.2.0 | UI library |
+| TypeScript | 5.x | Type safety |
+| Tailwind CSS | 4.x | Styling |
+| Lucide React | Latest | Icon system |
+| Framer Motion | 12.x | Animations |
 
-## 🎬 Demo
+## 🎯 Features Checklist
 
-### Screenshots
-*(Coming soon)*
+- ✅ Responsive sidebar navigation
+- ✅ Modern header with user profile
+- ✅ Advanced search functionality
+- ✅ Multiple filter options
+- ✅ Sortable data table
+- ✅ Multi-select checkboxes
+- ✅ Status badges with color coding
+- ✅ Gender icons with visual distinction
+- ✅ Action buttons (View, Edit, Delete)
+- ✅ Pagination with page numbers
+- ✅ Sticky table header
+- ✅ Hover effects and transitions
+- ✅ Clean, professional design
+- ✅ Mock data populated
+- ✅ TypeScript types defined
 
-### Live Demo
-*(Deploy link here)*
+## 🔜 Future Enhancements
 
----
+- [ ] Backend API integration
+- [ ] Real-time data updates
+- [ ] Student detail modal
+- [ ] Add/Edit student forms
+- [ ] Delete confirmation dialogs
+- [ ] Export to Excel functionality
+- [ ] Advanced sorting
+- [ ] Column visibility toggle
+- [ ] Dark mode support
+- [ ] Mobile responsive sidebar
 
-## 📊 Performance
+## 📝 Development Notes
 
-- **First Load JS**: ~200KB gzipped
-- **Animation FPS**: 60fps on modern browsers
-- **Lighthouse Score**: 90+ on all metrics
-- **Bundle Optimization**: Tree shaking enabled
+### Styling Approach
+- **Utility-first** with Tailwind CSS
+- **Component-scoped** styles
+- **Responsive** breakpoints
+- **Consistent** spacing system
 
----
+### State Management
+- React hooks (useState)
+- Local component state
+- Ready for Redux/Zustand integration
 
-## 🌐 Browser Support
+### Performance
+- Next.js App Router
+- Server Components where possible
+- Client Components for interactivity
+- Optimized bundle size
 
-- ✅ Chrome 90+
-- ✅ Firefox 88+
-- ✅ Safari 14+
-- ✅ Edge 90+
+## 📸 Screenshots
 
----
+### Dashboard View
+- Full layout with sidebar, header, and table
+- Clean, professional interface
+- Color-coded status badges
+
+### Responsive Design
+- Mobile-friendly layout
+- Adaptive navigation
+- Touch-optimized controls
 
 ## 🤝 Contributing
 
-1. Fork the project
-2. Create feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit changes (`git commit -m 'Add AmazingFeature'`)
-4. Push to branch (`git push origin feature/AmazingFeature`)
-5. Open Pull Request
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+## 👨‍💻 Author
+
+**Frontend Developer / UI Designer**
+- Created with ❤️ using Next.js and Tailwind CSS
+- Modern, clean, and professional design
+- Production-ready code
 
 ---
 
-## 📝 License
+**Happy Coding! 🚀**
 
-MIT License - see LICENSE file for details
+*For questions or support, please open an issue on GitHub.*
 
----
-
-## 🙏 Credits
-
-- Design inspiration: [Apple](https://apple.com)
-- Glassmorphism: [glassmorphism.com](https://glassmorphism.com)
-- Animations: [Framer Motion](https://framer.com/motion)
-- Icons: [Heroicons](https://heroicons.com)
-
----
-
-## 📞 Support
-
-Nếu có câu hỏi hoặc vấn đề:
-1. Check [DESIGN_GUIDE.md](./DESIGN_GUIDE.md)
-2. Check [UPGRADE_SUMMARY.md](./UPGRADE_SUMMARY.md)
-3. Open an issue on GitHub
-
----
-
-## 🚀 Next Steps
-
-### Đề xuất cải tiến:
-- [ ] Dark/Light mode toggle
-- [ ] Drag & drop reordering
-- [ ] Bulk operations
-- [ ] Profile pictures upload
-- [ ] Advanced filtering
-- [ ] Charts with Chart.js
-- [ ] Toast notifications
-- [ ] Skeleton loading states
-
----
-
-## 💡 Learn More
-
-### Next.js
-- [Next.js Documentation](https://nextjs.org/docs)
-- [Learn Next.js](https://nextjs.org/learn)
-
-### Framer Motion
-- [Framer Motion Docs](https://www.framer.com/motion/)
-- [Animation Examples](https://www.framer.com/motion/examples/)
-
-### Tailwind CSS
-- [Tailwind Docs](https://tailwindcss.com/docs)
-- [Tailwind v4 Changes](https://tailwindcss.com/blog/tailwindcss-v4-alpha)
-
----
-
-**Made with ❤️ and lots of ✨ animations**

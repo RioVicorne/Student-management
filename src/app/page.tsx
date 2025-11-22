@@ -1,9 +1,5 @@
-import StudentList from "@/components/StudentList";
+import { redirect } from 'next/navigation';
 
 export default function Home() {
-  return (
-    <div className="liquid-glass-bg min-h-screen">
-      <StudentList />
-    </div>
-  );
+  redirect('/dashboard');
 }
