@@ -1,8 +1,13 @@
+"use client";
+
+import { useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import DashboardHeader from "@/components/DashboardHeader";
 import StudentManagementTable from "@/components/StudentManagementTable";
 
 export default function StudentsPage() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   return (
     <div 
       className="min-h-screen relative overflow-hidden"
@@ -35,21 +40,21 @@ export default function StudentsPage() {
       />
       {/* Sidebar */}
       <div className="relative z-10">
-        <Sidebar activeMenu="Students" />
+        <Sidebar activeMenu="Students" isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       </div>
 
       {/* Header */}
       <div className="relative z-10">
-        <DashboardHeader />
+        <DashboardHeader onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
       </div>
 
       {/* Main Content */}
-      <main className="ml-64 mt-20 p-8 relative z-10">
+      <main className="lg:ml-64 mt-16 lg:mt-20 p-4 lg:p-8 relative z-10">
         <div className="max-w-[1600px] mx-auto">
           {/* Page Title */}
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-slate-900 drop-shadow-lg">Student Management</h1>
-            <p className="text-slate-700 mt-1 drop-shadow">Manage and monitor all student information</p>
+          <div className="mb-4 lg:mb-6">
+            <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 drop-shadow-lg">Student Management</h1>
+            <p className="text-sm lg:text-base text-slate-700 mt-1 drop-shadow">Manage and monitor all student information</p>
           </div>
 
           {/* Student Management Table */}

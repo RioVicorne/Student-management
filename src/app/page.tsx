@@ -1,7 +1,21 @@
+"use client";
+
+import { useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import DashboardHeader from "@/components/DashboardHeader";
 
 export default function Home() {
+  const [expandedCard, setExpandedCard] = useState<string | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const handleCardClick = (cardId: string) => {
+    setExpandedCard(expandedCard === cardId ? null : cardId);
+  };
+
+  const handleMenuToggle = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
   return (
     <div 
       className="min-h-screen relative overflow-hidden"
@@ -34,31 +48,48 @@ export default function Home() {
       />
       {/* Sidebar */}
       <div className="relative z-10">
-        <Sidebar activeMenu="Dashboard" />
+        <Sidebar activeMenu="Dashboard" isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       </div>
 
       {/* Header */}
       <div className="relative z-10">
-        <DashboardHeader />
+        <DashboardHeader onMenuToggle={handleMenuToggle} />
       </div>
 
       {/* Main Content */}
-      <main className="ml-64 mt-20 p-8 relative z-10">
+      <main className="lg:ml-64 mt-16 lg:mt-20 p-4 lg:p-8 relative z-10">
         <div className="max-w-[1600px] mx-auto">
           {/* Page Title */}
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-slate-900 drop-shadow-lg">Dashboard</h1>
-            <p className="text-slate-700 mt-1 drop-shadow">Overview of your student management system</p>
+          <div className="mb-4 lg:mb-6">
+            <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 drop-shadow-lg">Dashboard</h1>
+            <p className="text-sm lg:text-base text-slate-700 mt-1 drop-shadow">Overview of your student management system</p>
           </div>
 
           {/* Dashboard Content */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 gap-3 sm:gap-4 lg:gap-6 mb-4 lg:mb-6">
             {/* Stats Cards */}
-            <div className="glass-card rounded-3xl p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center border border-blue-200 shadow-sm flex-shrink-0">
+            <button
+              onClick={() => handleCardClick("total-students")}
+              className={`glass-card rounded-2xl lg:rounded-3xl text-left transition-all duration-300 sm:pointer-events-none cursor-pointer sm:cursor-default ${
+                expandedCard === "total-students" 
+                  ? "p-3 sm:p-4 lg:p-6" 
+                  : "p-2 sm:p-4 lg:p-6"
+              }`}
+            >
+              <div className={`flex items-center justify-center sm:justify-start gap-2 sm:gap-3 lg:gap-4 transition-all duration-300 ${
+                expandedCard === "total-students" ? "flex-row" : expandedCard === null ? "flex-col sm:flex-row" : "flex-row"
+              }`}>
+                <div className={`bg-blue-100 rounded-xl flex items-center justify-center border border-blue-200 shadow-sm flex-shrink-0 transition-all duration-300 ${
+                  expandedCard === "total-students" 
+                    ? "w-10 h-10 lg:w-12 lg:h-12" 
+                    : "w-12 h-12 sm:w-10 sm:h-10 lg:w-12 lg:h-12"
+                }`}>
                   <svg
-                    className="w-6 h-6 text-blue-600"
+                    className={`text-blue-600 transition-all duration-300 ${
+                      expandedCard === "total-students" 
+                        ? "w-5 h-5 lg:w-6 lg:h-6" 
+                        : "w-6 h-6 sm:w-5 sm:h-5 lg:w-6 lg:h-6"
+                    }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -71,18 +102,37 @@ export default function Home() {
                     />
                   </svg>
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm text-slate-600 mb-1">Total Students</p>
-                  <p className="text-3xl font-bold text-slate-900">0</p>
+                <div className={`flex-1 overflow-hidden transition-all duration-300 ${
+                  expandedCard === "total-students" ? "max-w-full opacity-100" : "max-w-0 opacity-0 sm:max-w-full sm:opacity-100"
+                }`}>
+                  <p className="text-xs lg:text-sm text-slate-600 mb-1 whitespace-nowrap">Total Students</p>
+                  <p className="text-2xl lg:text-3xl font-bold text-slate-900 whitespace-nowrap">0</p>
                 </div>
               </div>
-            </div>
+            </button>
 
-            <div className="glass-card rounded-3xl p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center border border-green-200 shadow-sm flex-shrink-0">
+            <button
+              onClick={() => handleCardClick("active-students")}
+              className={`glass-card rounded-2xl lg:rounded-3xl text-left transition-all duration-300 sm:pointer-events-none cursor-pointer sm:cursor-default ${
+                expandedCard === "active-students" 
+                  ? "p-3 sm:p-4 lg:p-6" 
+                  : "p-2 sm:p-4 lg:p-6"
+              }`}
+            >
+              <div className={`flex items-center justify-center sm:justify-start gap-2 sm:gap-3 lg:gap-4 transition-all duration-300 ${
+                expandedCard === "active-students" ? "flex-row" : expandedCard === null ? "flex-col sm:flex-row" : "flex-row"
+              }`}>
+                <div className={`bg-green-100 rounded-xl flex items-center justify-center border border-green-200 shadow-sm flex-shrink-0 transition-all duration-300 ${
+                  expandedCard === "active-students" 
+                    ? "w-10 h-10 lg:w-12 lg:h-12" 
+                    : "w-12 h-12 sm:w-10 sm:h-10 lg:w-12 lg:h-12"
+                }`}>
                   <svg
-                    className="w-6 h-6 text-green-600"
+                    className={`text-green-600 transition-all duration-300 ${
+                      expandedCard === "active-students" 
+                        ? "w-5 h-5 lg:w-6 lg:h-6" 
+                        : "w-6 h-6 sm:w-5 sm:h-5 lg:w-6 lg:h-6"
+                    }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -95,18 +145,37 @@ export default function Home() {
                     />
                   </svg>
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm text-slate-600 mb-1">Active Students</p>
-                  <p className="text-3xl font-bold text-slate-900">0</p>
+                <div className={`flex-1 overflow-hidden transition-all duration-300 ${
+                  expandedCard === "active-students" ? "max-w-full opacity-100" : "max-w-0 opacity-0 sm:max-w-full sm:opacity-100"
+                }`}>
+                  <p className="text-xs lg:text-sm text-slate-600 mb-1 whitespace-nowrap">Active Students</p>
+                  <p className="text-2xl lg:text-3xl font-bold text-slate-900 whitespace-nowrap">0</p>
                 </div>
               </div>
-            </div>
+            </button>
 
-            <div className="glass-card rounded-3xl p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center border border-purple-200 shadow-sm flex-shrink-0">
+            <button
+              onClick={() => handleCardClick("courses")}
+              className={`glass-card rounded-2xl lg:rounded-3xl text-left transition-all duration-300 sm:pointer-events-none cursor-pointer sm:cursor-default ${
+                expandedCard === "courses" 
+                  ? "p-3 sm:p-4 lg:p-6" 
+                  : "p-2 sm:p-4 lg:p-6"
+              }`}
+            >
+              <div className={`flex items-center justify-center sm:justify-start gap-2 sm:gap-3 lg:gap-4 transition-all duration-300 ${
+                expandedCard === "courses" ? "flex-row" : expandedCard === null ? "flex-col sm:flex-row" : "flex-row"
+              }`}>
+                <div className={`bg-purple-100 rounded-xl flex items-center justify-center border border-purple-200 shadow-sm flex-shrink-0 transition-all duration-300 ${
+                  expandedCard === "courses" 
+                    ? "w-10 h-10 lg:w-12 lg:h-12" 
+                    : "w-12 h-12 sm:w-10 sm:h-10 lg:w-12 lg:h-12"
+                }`}>
                   <svg
-                    className="w-6 h-6 text-purple-600"
+                    className={`text-purple-600 transition-all duration-300 ${
+                      expandedCard === "courses" 
+                        ? "w-5 h-5 lg:w-6 lg:h-6" 
+                        : "w-6 h-6 sm:w-5 sm:h-5 lg:w-6 lg:h-6"
+                    }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -119,18 +188,37 @@ export default function Home() {
                     />
                   </svg>
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm text-slate-600 mb-1">Courses</p>
-                  <p className="text-3xl font-bold text-slate-900">0</p>
+                <div className={`flex-1 overflow-hidden transition-all duration-300 ${
+                  expandedCard === "courses" ? "max-w-full opacity-100" : "max-w-0 opacity-0 sm:max-w-full sm:opacity-100"
+                }`}>
+                  <p className="text-xs lg:text-sm text-slate-600 mb-1 whitespace-nowrap">Courses</p>
+                  <p className="text-2xl lg:text-3xl font-bold text-slate-900 whitespace-nowrap">0</p>
                 </div>
               </div>
-            </div>
+            </button>
 
-            <div className="glass-card rounded-3xl p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center border border-orange-200 shadow-sm flex-shrink-0">
+            <button
+              onClick={() => handleCardClick("graduated")}
+              className={`glass-card rounded-2xl lg:rounded-3xl text-left transition-all duration-300 sm:pointer-events-none cursor-pointer sm:cursor-default ${
+                expandedCard === "graduated" 
+                  ? "p-3 sm:p-4 lg:p-6" 
+                  : "p-2 sm:p-4 lg:p-6"
+              }`}
+            >
+              <div className={`flex items-center justify-center sm:justify-start gap-2 sm:gap-3 lg:gap-4 transition-all duration-300 ${
+                expandedCard === "graduated" ? "flex-row" : expandedCard === null ? "flex-col sm:flex-row" : "flex-row"
+              }`}>
+                <div className={`bg-orange-100 rounded-xl flex items-center justify-center border border-orange-200 shadow-sm flex-shrink-0 transition-all duration-300 ${
+                  expandedCard === "graduated" 
+                    ? "w-10 h-10 lg:w-12 lg:h-12" 
+                    : "w-12 h-12 sm:w-10 sm:h-10 lg:w-12 lg:h-12"
+                }`}>
                   <svg
-                    className="w-6 h-6 text-orange-600"
+                    className={`text-orange-600 transition-all duration-300 ${
+                      expandedCard === "graduated" 
+                        ? "w-5 h-5 lg:w-6 lg:h-6" 
+                        : "w-6 h-6 sm:w-5 sm:h-5 lg:w-6 lg:h-6"
+                    }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -149,18 +237,20 @@ export default function Home() {
                     />
                   </svg>
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm text-slate-600 mb-1">Graduated</p>
-                  <p className="text-3xl font-bold text-slate-900">0</p>
+                <div className={`flex-1 overflow-hidden transition-all duration-300 ${
+                  expandedCard === "graduated" ? "max-w-full opacity-100" : "max-w-0 opacity-0 sm:max-w-full sm:opacity-100"
+                }`}>
+                  <p className="text-xs lg:text-sm text-slate-600 mb-1 whitespace-nowrap">Graduated</p>
+                  <p className="text-2xl lg:text-3xl font-bold text-slate-900 whitespace-nowrap">0</p>
                 </div>
               </div>
-            </div>
+            </button>
           </div>
 
           {/* Quick Actions */}
-          <div className="glass-card rounded-xl p-6">
-            <h2 className="text-xl font-semibold text-slate-900 mb-4 drop-shadow">Quick Actions</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="glass-card rounded-xl lg:rounded-2xl p-4 lg:p-6">
+            <h2 className="text-lg lg:text-xl font-semibold text-slate-900 mb-3 lg:mb-4 drop-shadow">Quick Actions</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
               <a
                 href="/students"
                 className="flex items-center space-x-3 p-4 border border-slate-200 rounded-lg hover:bg-white/20 hover:border-blue-500 transition-all duration-200 group backdrop-blur-sm glass"

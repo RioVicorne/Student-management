@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -9,13 +10,20 @@ import {
   GraduationCap,
   Settings,
   ChevronRight,
+  Menu,
+  X,
 } from "lucide-react";
 
 interface SidebarProps {
   activeMenu?: string;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
-export default function Sidebar({ activeMenu }: SidebarProps) {
+export default function Sidebar({ activeMenu, isOpen: externalIsOpen, onClose }: SidebarProps) {
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
+  const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
+  const setIsOpen = onClose || setInternalIsOpen;
   const pathname = usePathname();
   const router = useRouter();
 
@@ -47,15 +55,69 @@ export default function Sidebar({ activeMenu }: SidebarProps) {
     // If already on the target path, just scroll to top
     if (path === pathname) {
       window.scrollTo({ top: 0, behavior: "smooth" });
+      if (onClose) onClose();
+      else setInternalIsOpen(false); // Close mobile menu
       return;
     }
     
     // Navigate to the path
     router.push(path);
+    if (onClose) onClose();
+    else setInternalIsOpen(false); // Close mobile menu after navigation
   };
 
+  // Close sidebar when clicking outside on mobile
+  useEffect(() => {
+    if (externalIsOpen === undefined) return; // Only handle if controlled externally
+    
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (isOpen && !target.closest("aside") && !target.closest("header")) {
+        if (onClose) onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen, externalIsOpen, onClose]);
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 glass-strong shadow-2xl z-40">
+    <>
+      {/* Overlay for mobile */}
+      {isOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+          onClick={() => {
+            if (onClose) onClose();
+            else setInternalIsOpen(false);
+          }}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={`fixed left-0 top-0 h-screen w-64 glass-strong shadow-2xl z-40 transform transition-transform duration-300 ease-in-out ${
+          isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        }`}
+      >
       <div className="flex flex-col h-full">
         {/* Logo - Clickable */}
         <Link 
@@ -122,6 +184,7 @@ export default function Sidebar({ activeMenu }: SidebarProps) {
         </div>
       </div>
     </aside>
+    </>
   );
 }
 
