@@ -5,6 +5,9 @@ import Sidebar from "@/components/Sidebar";
 import DashboardHeader from "@/components/DashboardHeader";
 import StudentManagementTable from "@/components/StudentManagementTable";
 
+// Prevent static generation/prerendering
+export const dynamic = 'force-dynamic';
+
 export default function StudentsPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
