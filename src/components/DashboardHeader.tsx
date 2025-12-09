@@ -5,10 +5,12 @@ import { useState } from "react";
 
 interface DashboardHeaderProps {
   onMenuToggle?: () => void;
+  isSidebarOpen?: boolean;
 }
 
 export default function DashboardHeader({
   onMenuToggle,
+  isSidebarOpen = false,
 }: DashboardHeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -18,7 +20,11 @@ export default function DashboardHeader({
   };
 
   return (
-    <header className="fixed top-0 right-0 left-0 lg:left-64 h-16 lg:h-20 glass-strong shadow-md z-30 border-b border-white/30">
+    <header
+      className={`fixed top-0 right-0 left-0 lg:left-64 h-16 lg:h-20 glass-strong shadow-md z-30 border-b border-white/30 transition-transform duration-300 ease-in-out ${
+        isSidebarOpen ? "translate-x-64 lg:translate-x-0" : "translate-x-0"
+      }`}
+    >
       <div className="h-full px-4 lg:px-8 flex items-center justify-between gap-2 lg:gap-0">
         {/* Mobile Menu Toggle Button */}
         <button

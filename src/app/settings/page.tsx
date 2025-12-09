@@ -38,17 +38,17 @@ export default function SettingsPage() {
         }}
       />
       {/* Sidebar */}
-      <div className="relative z-10">
-        <Sidebar activeMenu="Settings" isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-      </div>
+      <Sidebar activeMenu="Settings" isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       {/* Header */}
-      <div className="relative z-10">
-        <DashboardHeader onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
+      <div className="relative z-30">
+        <DashboardHeader onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)} isSidebarOpen={isSidebarOpen} />
       </div>
 
       {/* Main Content */}
-      <main className="lg:ml-64 mt-16 lg:mt-20 p-4 lg:p-8 relative z-10">
+      <main className={`lg:ml-64 mt-16 lg:mt-20 p-4 lg:p-8 relative z-10 transition-transform duration-300 ease-in-out ${
+        isSidebarOpen ? 'translate-x-64 lg:translate-x-0' : 'translate-x-0'
+      }`}>
         <div className="max-w-[1600px] mx-auto">
           {/* Page Title */}
           <div className="mb-4 lg:mb-6">

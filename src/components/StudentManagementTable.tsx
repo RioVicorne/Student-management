@@ -30,7 +30,15 @@ import {
   type Student,
 } from "@/lib/services/student.service";
 
-export default function StudentManagementTable() {
+interface StudentManagementTableProps {
+  initialAction?: string | null;
+  initialStatus?: "Active" | "Graduated" | "Suspended" | null;
+}
+
+export default function StudentManagementTable({
+  initialAction,
+  initialStatus,
+}: StudentManagementTableProps = {}) {
   const [students, setStudents] = useState<Student[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,9 +48,9 @@ export default function StudentManagementTable() {
   const [searchQuery, setSearchQuery] = useState("");
   const [facultyFilter, setFacultyFilter] = useState("all");
   const [classFilter, setClassFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState(initialStatus || "all");
   const [currentPage, setCurrentPage] = useState(1);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(initialAction === "add");
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -84,6 +92,13 @@ export default function StudentManagementTable() {
 
     fetchStudents();
   }, []);
+
+  // Handle initial status filter from URL
+  useEffect(() => {
+    if (initialStatus) {
+      setStatusFilter(initialStatus);
+    }
+  }, [initialStatus]);
 
   // Filter students based on search query (Student Name or Student ID)
   const filteredStudents = useMemo(() => {

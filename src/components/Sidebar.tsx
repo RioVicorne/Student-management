@@ -10,8 +10,14 @@ import {
   GraduationCap,
   Settings,
   ChevronRight,
+  ChevronDown,
   Menu,
   X,
+  UserPlus,
+  List,
+  CheckCircle,
+  GraduationCap as GraduationCapIcon,
+  Ban,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -22,18 +28,50 @@ interface SidebarProps {
 
 export default function Sidebar({ activeMenu, isOpen: externalIsOpen, onClose }: SidebarProps) {
   const [internalIsOpen, setInternalIsOpen] = useState(false);
+  const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set());
   const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
   const setIsOpen = onClose || setInternalIsOpen;
   const pathname = usePathname();
   const router = useRouter();
 
   const menuItems = [
-    { name: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
-    { name: "Students", icon: Users, path: "/students" },
-    { name: "Courses", icon: BookOpen, path: "/courses" },
-    { name: "Grades", icon: GraduationCap, path: "/grades" },
-    { name: "Settings", icon: Settings, path: "/settings" },
+    { name: "Dashboard", icon: LayoutDashboard, path: "/dashboard", hasSubmenu: false },
+    { 
+      name: "Students", 
+      icon: Users, 
+      path: "/students", 
+      hasSubmenu: true,
+      submenuItems: [
+        { name: "All Students", icon: List, path: "/students", query: "" },
+        { name: "Add New Student", icon: UserPlus, path: "/students", query: "?action=add" },
+        { name: "Active Students", icon: CheckCircle, path: "/students", query: "?status=Active" },
+        { name: "Graduated", icon: GraduationCapIcon, path: "/students", query: "?status=Graduated" },
+        { name: "Suspended", icon: Ban, path: "/students", query: "?status=Suspended" },
+      ]
+    },
+    { name: "Courses", icon: BookOpen, path: "/courses", hasSubmenu: false },
+    { name: "Grades", icon: GraduationCap, path: "/grades", hasSubmenu: false },
+    { name: "Settings", icon: Settings, path: "/settings", hasSubmenu: false },
   ];
+
+  // Auto-expand Students menu if on students page
+  useEffect(() => {
+    if (pathname === "/students") {
+      setExpandedMenus(new Set(["Students"]));
+    }
+  }, [pathname]);
+
+  const toggleSubmenu = (menuName: string) => {
+    setExpandedMenus((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(menuName)) {
+        newSet.delete(menuName);
+      } else {
+        newSet.add(menuName);
+      }
+      return newSet;
+    });
+  };
 
   // Determine active menu based on pathname or prop
   const getActiveMenu = () => {
@@ -51,9 +89,11 @@ export default function Sidebar({ activeMenu, isOpen: externalIsOpen, onClose }:
 
   const active = getActiveMenu();
 
-  const handleNavigation = (path: string, name: string) => {
+  const handleNavigation = (path: string, name: string, query?: string) => {
+    const fullPath = query ? `${path}${query}` : path;
+    
     // If already on the target path, just scroll to top
-    if (path === pathname) {
+    if (fullPath === pathname + (typeof window !== 'undefined' ? window.location.search : '')) {
       window.scrollTo({ top: 0, behavior: "smooth" });
       if (onClose) onClose();
       else setInternalIsOpen(false); // Close mobile menu
@@ -61,7 +101,7 @@ export default function Sidebar({ activeMenu, isOpen: externalIsOpen, onClose }:
     }
     
     // Navigate to the path
-    router.push(path);
+    router.push(fullPath);
     if (onClose) onClose();
     else setInternalIsOpen(false); // Close mobile menu after navigation
   };
@@ -139,36 +179,99 @@ export default function Sidebar({ activeMenu, isOpen: externalIsOpen, onClose }:
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = active === item.name;
+            const isExpanded = expandedMenus.has(item.name);
+            const hasSubmenu = item.hasSubmenu || false;
             
             return (
-              <button
-                key={item.name}
-                onClick={() => handleNavigation(item.path, item.name)}
-                className={`group relative w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 ${
-                  isActive
-                    ? "bg-blue-500/20 text-slate-900 shadow-lg shadow-blue-600/30 backdrop-blur-sm font-semibold border border-blue-400/30"
-                    : "text-slate-700 hover:bg-white/20 hover:text-slate-900 backdrop-blur-sm font-medium"
-                }`}
-              >
-                <div className="flex items-center space-x-3">
-                  <Icon 
-                    className={`w-5 h-5 transition-transform duration-200 ${
-                      isActive 
-                        ? "scale-110 text-blue-600" 
-                        : "group-hover:scale-110 text-slate-600"
-                    }`} 
-                  />
-                  <span className="font-medium">{item.name}</span>
-                </div>
-                {/* Active indicator arrow */}
-                {isActive && (
-                  <ChevronRight className="w-4 h-4 text-blue-600" />
+              <div key={item.name} className="space-y-1">
+                <button
+                  onClick={() => {
+                    if (hasSubmenu) {
+                      toggleSubmenu(item.name);
+                    } else {
+                      handleNavigation(item.path, item.name);
+                    }
+                  }}
+                  className={`group relative w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 ${
+                    isActive
+                      ? "bg-blue-500/20 text-slate-900 shadow-lg shadow-blue-600/30 backdrop-blur-sm font-semibold border border-blue-400/30"
+                      : "text-slate-700 hover:bg-white/20 hover:text-slate-900 backdrop-blur-sm font-medium"
+                  }`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <Icon 
+                      className={`w-5 h-5 transition-transform duration-200 ${
+                        isActive 
+                          ? "scale-110 text-blue-600" 
+                          : "group-hover:scale-110 text-slate-600"
+                      }`} 
+                    />
+                    <span className="font-medium">{item.name}</span>
+                  </div>
+                  <div className="flex items-center">
+                    {/* Submenu toggle icon */}
+                    {hasSubmenu ? (
+                      <ChevronDown 
+                        className={`w-4 h-4 transition-transform duration-200 ${
+                          isExpanded ? "rotate-180" : ""
+                        } ${
+                          isActive ? "text-blue-600" : "text-slate-600"
+                        }`} 
+                      />
+                    ) : (
+                      <>
+                        {/* Active indicator arrow */}
+                        {isActive && (
+                          <ChevronRight className="w-4 h-4 text-blue-600" />
+                        )}
+                        {/* Hover arrow indicator */}
+                        {!isActive && (
+                          <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-60 text-slate-600 transition-opacity duration-200" />
+                        )}
+                      </>
+                    )}
+                  </div>
+                </button>
+                
+                {/* Submenu */}
+                {hasSubmenu && item.submenuItems && (
+                  <div
+                    className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                      isExpanded ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+                    }`}
+                  >
+                    <div className="ml-4 pl-4 border-l-2 border-slate-300/30 space-y-1 mt-1">
+                      {item.submenuItems.map((subItem) => {
+                        const SubIcon = subItem.icon;
+                        const isSubActive = pathname === subItem.path && 
+                          (subItem.query === "" || 
+                           (typeof window !== 'undefined' && window.location.search === subItem.query));
+                        
+                        return (
+                          <button
+                            key={subItem.name}
+                            onClick={() => handleNavigation(subItem.path, subItem.name, subItem.query)}
+                            className={`group w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-200 text-sm ${
+                              isSubActive
+                                ? "bg-blue-500/20 text-blue-700 font-semibold border border-blue-400/30"
+                                : "text-slate-600 hover:bg-white/20 hover:text-slate-900 font-medium"
+                            }`}
+                          >
+                            <SubIcon 
+                              className={`w-4 h-4 transition-transform duration-200 ${
+                                isSubActive 
+                                  ? "text-blue-600 scale-110" 
+                                  : "text-slate-500 group-hover:scale-110"
+                              }`} 
+                            />
+                            <span>{subItem.name}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 )}
-                {/* Hover arrow indicator */}
-                {!isActive && (
-                  <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-60 text-slate-600 transition-opacity duration-200" />
-                )}
-              </button>
+              </div>
             );
           })}
         </nav>

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import DashboardHeader from "@/components/DashboardHeader";
 import StudentManagementTable from "@/components/StudentManagementTable";
@@ -8,8 +9,13 @@ import StudentManagementTable from "@/components/StudentManagementTable";
 // Prevent static generation/prerendering
 export const dynamic = 'force-dynamic';
 
-export default function StudentsPage() {
+function StudentsPageContent() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const searchParams = useSearchParams();
+  
+  // Get initial values from URL params
+  const initialAction = searchParams.get('action');
+  const initialStatus = searchParams.get('status');
 
   return (
     <div 
@@ -42,17 +48,17 @@ export default function StudentsPage() {
         }}
       />
       {/* Sidebar */}
-      <div className="relative z-10">
-        <Sidebar activeMenu="Students" isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-      </div>
+      <Sidebar activeMenu="Students" isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       {/* Header */}
-      <div className="relative z-10">
-        <DashboardHeader onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
+      <div className="relative z-30">
+        <DashboardHeader onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)} isSidebarOpen={isSidebarOpen} />
       </div>
 
       {/* Main Content */}
-      <main className="lg:ml-64 mt-16 lg:mt-20 p-4 lg:p-8 relative z-10">
+      <main className={`lg:ml-64 mt-16 lg:mt-20 p-4 lg:p-8 relative z-10 transition-transform duration-300 ease-in-out ${
+        isSidebarOpen ? 'translate-x-64 lg:translate-x-0' : 'translate-x-0'
+      }`}>
         <div className="max-w-[1600px] mx-auto">
           {/* Page Title */}
           <div className="mb-4 lg:mb-6">
@@ -61,10 +67,25 @@ export default function StudentsPage() {
           </div>
 
           {/* Student Management Table */}
-          <StudentManagementTable />
+          <StudentManagementTable 
+            initialAction={initialAction}
+            initialStatus={initialStatus as "Active" | "Graduated" | "Suspended" | null}
+          />
         </div>
       </main>
     </div>
+  );
+}
+
+export default function StudentsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-slate-600">Loading...</div>
+      </div>
+    }>
+      <StudentsPageContent />
+    </Suspense>
   );
 }
 

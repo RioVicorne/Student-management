@@ -48,21 +48,78 @@ const transformToSupabase = (student: Omit<Student, "id">) => {
 };
 
 // Get all students
-export async function getStudents(): Promise<Student[]> {
+// Optional: filter by date range (only show students created after a certain date)
+export async function getStudents(options?: {
+  startDate?: string; // ISO date string (e.g., "2024-01-01")
+  endDate?: string; // ISO date string (e.g., "2024-12-31")
+}): Promise<Student[]> {
   try {
-    const { data, error } = await supabase
-      .from("students")
-      .select("*")
-      .order("created_at", { ascending: false });
+    let query = supabase.from("students").select("*");
+
+    // Apply date filters if provided
+    if (options?.startDate) {
+      query = query.gte("created_at", options.startDate);
+    }
+    if (options?.endDate) {
+      query = query.lte("created_at", options.endDate);
+    }
+
+    const { data, error } = await query.order("created_at", {
+      ascending: false,
+    });
 
     if (error) {
-      console.error("Error fetching students:", error);
-      throw error;
+      // Properly extract error information for logging
+      const errorDetails = {
+        code: error.code || "UNKNOWN",
+        message: error.message || "Unknown error occurred",
+        details: error.details || null,
+        hint: error.hint || null,
+      };
+      console.error(
+        "Error fetching students:",
+        JSON.stringify(errorDetails, null, 2)
+      );
+      console.error("Full Supabase error object:", error);
+
+      // Create a proper Error object with all details
+      const errorMessage =
+        error.message || error.hint || "Failed to fetch students";
+      const errorObj = new Error(errorMessage);
+      (errorObj as any).code = error.code;
+      (errorObj as any).details = error.details;
+      (errorObj as any).hint = error.hint;
+      throw errorObj;
     }
 
     return (data || []).map(transformStudent);
-  } catch (error) {
-    console.error("Error in getStudents:", error);
+  } catch (error: any) {
+    // Enhanced error logging - extract all possible properties
+    const errorInfo: any = {
+      message: error?.message || error?.toString() || "Unknown error",
+      code: error?.code || "UNKNOWN",
+      details: error?.details || null,
+      hint: error?.hint || null,
+    };
+
+    // Log with JSON stringify to see all properties
+    try {
+      console.error(
+        "Error in getStudents:",
+        JSON.stringify(errorInfo, null, 2)
+      );
+      console.error("Full error object:", error);
+    } catch (e) {
+      // Fallback if JSON.stringify fails
+      console.error("Error in getStudents:", {
+        message: errorInfo.message,
+        code: errorInfo.code,
+        type: typeof error,
+        constructor: error?.constructor?.name,
+      });
+    }
+
+    // Re-throw the error (it should already be enhanced if from Supabase)
     throw error;
   }
 }
@@ -127,11 +184,15 @@ export async function addStudent(
         details: error.details || null,
         hint: error.hint || null,
       };
-      console.error("Error adding student:", JSON.stringify(errorDetails, null, 2));
+      console.error(
+        "Error adding student:",
+        JSON.stringify(errorDetails, null, 2)
+      );
       console.error("Full Supabase error object:", error);
-      
+
       // Create a proper Error object with all details
-      const errorMessage = error.message || error.hint || "Failed to add student";
+      const errorMessage =
+        error.message || error.hint || "Failed to add student";
       const errorObj = new Error(errorMessage);
       (errorObj as any).code = error.code;
       (errorObj as any).details = error.details;
@@ -152,7 +213,7 @@ export async function addStudent(
       details: error?.details || null,
       hint: error?.hint || null,
     };
-    
+
     // Log with JSON stringify to see all properties
     try {
       console.error("Error in addStudent:", JSON.stringify(errorInfo, null, 2));
@@ -166,7 +227,7 @@ export async function addStudent(
         constructor: error?.constructor?.name,
       });
     }
-    
+
     // Re-throw the error (it should already be enhanced if from Supabase)
     throw error;
   }
@@ -179,7 +240,7 @@ export async function updateStudent(
 ): Promise<Student> {
   try {
     const updateData: any = {};
-    
+
     if (student.studentId) updateData.student_id = student.studentId;
     if (student.fullName) updateData.full_name = student.fullName;
     if (student.email) updateData.email = student.email;
@@ -252,4 +313,3 @@ export async function searchStudents(query: string): Promise<Student[]> {
     throw error;
   }
 }
-
